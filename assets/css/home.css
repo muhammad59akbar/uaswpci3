@@ -1,0 +1,10 @@
+.myCorousel {
+    height: 100vh;
+    background-image: linear-gradient(rgba(0,0,0, 0.4), rgba(0,0,0, 0.7)), url('../images/NamaKelompok/wpp3.jpg');
+    background-size: cover;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+}
