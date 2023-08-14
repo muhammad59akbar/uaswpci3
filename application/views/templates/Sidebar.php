@@ -49,36 +49,38 @@
                         </ul>
                     </div>
                 </li>
+                <?php if ($userlogin['role_id'] === '1') : ?>
 
-                <li>
+                    <li>
 
 
-                    <a class="nav-link px-3 sidebar-link" data-bs-toggle="collapse" href="#user">
-                        <span class="me-2"><i class="bi bi-people"></i></span>
-                        <span class="ms-2">User</span>
-                        <span class="ms-auto">
-                            <span class="right-icon">
-                                <i class="bi bi-chevron-down"></i>
+                        <a class="nav-link px-3 sidebar-link" data-bs-toggle="collapse" href="#user">
+                            <span class="me-2"><i class="bi bi-people"></i></span>
+                            <span class="ms-2">User</span>
+                            <span class="ms-auto">
+                                <span class="right-icon">
+                                    <i class="bi bi-chevron-down"></i>
+                                </span>
                             </span>
-                        </span>
-                    </a>
-                    <div class="collapse" id="user">
-                        <ul class="navbar-nav ps-3">
-                            <li>
-                                <a href="" class="nav-link px-3">
-                                    <span class="me-2"><i class="bi bi-person-plus"></i>
-                                        <span class="ms-2">Add User</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="<?= base_url('Admin/Mimin/ListUser') ?>" class="nav-link px-3">
-                                    <span class="me-2"><i class="bi bi-sticky"></i>
-                                        <span class="ms-2">List User</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                        </a>
+                        <div class="collapse" id="user">
+                            <ul class="navbar-nav ps-3">
+                                <li>
+                                    <a href="<?= base_url('Admin/Mimin/AddUser') ?>" class="nav-link px-3">
+                                        <span class="me-2"><i class="bi bi-person-plus"></i>
+                                            <span class="ms-2">Add User</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= base_url('Admin/Mimin/ListUser') ?>" class="nav-link px-3">
+                                        <span class="me-2"><i class="bi bi-sticky"></i>
+                                            <span class="ms-2">List User</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                <?php endif; ?>
 
                 <li class="my-2">
                     <hr class="dropdown-divider bg-light" />

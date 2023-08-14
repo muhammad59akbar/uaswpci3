@@ -124,8 +124,159 @@ class Mimin extends CI_Controller
             $this->load->view('templates/Sidebar', $data);
             $this->load->view('Admin/ListUser', $data);
             $this->load->view('templates/Footer');
+        } else {
+            redirect('Admin/Blocked');
         }
     }
+
+    public function addUser()
+    {
+        $data['title'] = 'Add New User';
+        $data['userlogin'] = $this->db->get_where('users', ['email' => $this->session->userdata('email')])->row_array();
+
+        $this->form_validation->set_rules('first_name', 'First Name', 'required|trim');
+        $this->form_validation->set_rules('last_name', 'Last Name', 'required|trim');
+        $this->form_validation->set_rules('email', 'Email', 'required|trim|valid_email|is_unique[users.email]', [
+            'is_unique' => 'this email has already registered !!!'
+        ]);
+        $this->form_validation->set_rules('password1', 'Password', 'required|trim|min_length[3]|matches[password2]', [
+            'matches' => 'password dont match !!!',
+            'min_length' => 'password too short !!!'
+        ]);
+        $this->form_validation->set_rules('password2', 'Conffirm Password', 'required|trim|matches[password1]');
+        if ($this->form_validation->run() === false) {
+            if ($this->session->userdata('role_id') === '1') {
+                $this->load->view('templates/Header', $data);
+                $this->load->view('templates/Sidebar', $data);
+                $this->load->view('Admin/AddUser');
+                $this->load->view('templates/Footer');
+            } else {
+                redirect('Admin/Blocked');
+            }
+        } else {
+            $config['upload_path'] = './assets/images/user/';
+            $config['allowed_types'] = 'jpg|jpeg|png';
+            $config['max_size'] = 2048;
+            $config['encrypt_name'] = true; // Generate a unique encrypted file name
+            $config['overwrite'] = false;
+            $this->load->library('upload', $config);
+            if ($this->upload->do_upload('image')) {
+                $uploadData = $this->upload->data();
+                $NewUser['image'] = $uploadData['file_name'];
+            } else {
+                $NewUser['image'] = 'default.jpg';
+                $error = $this->upload->display_errors();
+            }
+            $this->Mimin_models->addNewUser($NewUser);
+            $this->session->set_flashdata('message', '<div id="success-message" class="alert alert-success" role="alert">
+            New User been created !!! </div>');
+            redirect('Admin/Mimin/ListUser');
+        }
+    }
+
+    public function editUser($idUser)
+    {
+        $data['title'] = 'Edit User';
+        $data['userlogin'] = $this->db->get_where('users', ['email' => $this->session->userdata('email')])->row_array();
+        $data['byID'] = $this->Mimin_models->getUserById($idUser);
+        $data['role_selected'] = ['1' => 'Administrator', '2' => 'User'];
+
+        $this->form_validation->set_rules('first_name', 'First Name', 'required|trim');
+        $this->form_validation->set_rules('last_name', 'Last Name', 'required|trim');
+        $this->form_validation->set_rules('password', 'Password', 'min_length[3]', [
+            'min_length' => 'Password is too short!'
+        ]);
+
+        $email = $this->input->post('email');
+        $password = $this->input->post('password');
+        $role_id = $this->input->post('role_id');
+
+        // Periksa apakah email berubah atau tidak
+        if ($email != $data['byID']['email']) {
+            $this->form_validation->set_rules('email', 'Email', 'trim|valid_email|is_unique[users.email]', [
+                'is_unique' => 'This email has already been registered!'
+            ]);
+        }
+
+        // Periksa apakah password berubah atau tidak
+        if (!empty($password)) {
+            // Password berubah, hash password baru
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        } else {
+            // Password tidak berubah, gunakan password sebelumnya
+            $hashedPassword = $data['byID']['password'];
+        }
+
+
+
+        if ($this->form_validation->run() === false) {
+            if ($this->session->userdata('role_id') === '1') {
+                $this->load->view('templates/Header', $data);
+                $this->load->view('templates/Sidebar', $data);
+                $this->load->view('Admin/EditUser', $data);
+                $this->load->view('templates/Footer');
+            } else {
+                redirect('Admin/Blocked');
+            }
+        } else {
+            $UpdateItem = [
+                "first_name" => htmlspecialchars($this->input->post('first_name', true)),
+                "last_name" => htmlspecialchars($this->input->post('last_name', true)),
+                "role_id" => $role_id,
+                "password" => $hashedPassword
+            ];
+            if ($email != $data['byID']['email']) {
+                // Update the email field
+                $UpdateItem['email'] = $email;
+
+                // Check if the logged-in user's email is being changed
+                if ($data['userlogin']['email'] === $data['byID']['email']) {
+                    // Log out the user
+                    $this->session->sess_destroy();
+                }
+            }
+            // Update image
+            $update_image = $_FILES['image'];
+            if ($update_image && $update_image['name']) {
+                $config['upload_path'] = './assets/images/user/';
+                $config['allowed_types'] = 'jpg|png';
+                $config['max_size'] = '2048';
+                $config['encrypt_name'] = true; // Generate a unique encrypted file name
+                $config['overwrite'] = false;
+                $this->load->library('upload', $config);
+
+                if ($this->upload->do_upload('image')) {
+                    $defaultImage = $data['byID']['image'];
+                    if ($defaultImage != 'default.jpg') {
+                        unlink(FCPATH . 'assets/images/user/' . $defaultImage);
+                    }
+                    $new_image = $this->upload->data('file_name');
+                    $UpdateItem['image'] = $new_image;
+                } else {
+                    echo $this->upload->display_errors();
+                }
+            }
+            $this->db->where('id_user', $this->input->post('id_user'));
+            $this->db->update('users', $UpdateItem);
+
+            if ($data['userlogin']['role_id'] == 1) {
+                if ($data['users']['id_user'] == $idUser && $role_id == 2) {
+                    // Jika admin mengubah role_id sendiri menjadi 2, lakukan logout
+                    redirect('Admin/Mimin/logout');
+                    // Ganti 'login' dengan halaman login yang sesuai
+                } elseif ($role_id == 2) {
+                    // Jika admin merubah role_id pengguna lain menjadi 2, redirect ke updateuser
+                    redirect('Admin/Mimin/editUser/' . $data['byID']['id_user']); // Ganti 'updateuser' dengan halaman updateuser yang sesuai
+                }
+            }
+
+
+            $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Your update is success!</div>');
+            redirect('Admin/Mimin/editUser/' . $data['byID']['id_user']);
+        }
+    }
+
+
 
 
     public function logout()
