@@ -35,7 +35,7 @@
                                 <td class="align-middle text-center">User</td>
                             <?php endif ?>
                             <td class="text-center align-middle "><a href="<?= base_url(); ?>Admin/deleteUser/<?= $res['id_user'] ?>" class="btn btn-danger" onclick="return confirm('anda yakin ingin menghapus data ini?')"><i class="bi bi-archive-fill"></i></a>
-                                <a href="<?= base_url(); ?>Admin/UpdateUser/<?= $res['id_user'] ?>" class="btn btn-success"><i class="bi bi-pencil-square"></i></a>
+                                <a href="<?= base_url(); ?>Admin/Mimin/editUser/<?= $res['id_user'] ?>" class="btn btn-success"><i class="bi bi-pencil-square"></i></a>
                             </td>
                         </tr>
                     <?php endforeach ?>
